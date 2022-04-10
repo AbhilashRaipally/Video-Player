@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Video Player</string>
+    <string name="channel_name">Video Playback</string>
+    <string name="channel_desc">Video playback notification</string>
+</resources>
