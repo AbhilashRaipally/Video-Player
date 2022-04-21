@@ -7,8 +7,8 @@ import java.io.IOException
 
 object VideoUtils {
 
-    const val NOTIFICATION_ID = 3000
-    const val PLAYBACK_CHANNEL_ID = "MyChannelId"
+    const val NOTIFICATION_ID = 3001
+    const val PLAYBACK_CHANNEL_ID = "com.example.videoplayer"
 
     private fun getJsonDataFromAsset(context: Context, fileName: String): String? {
         val jsonString: String
