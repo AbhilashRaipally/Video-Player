@@ -9,6 +9,7 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
+import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.appcompat.content.res.AppCompatResources
@@ -19,6 +20,8 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
+import com.google.android.exoplayer2.ext.mediasession.TimelineQueueEditor
+import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
@@ -79,11 +82,23 @@ class PlayerBkgService : Service() {
 
         playerNotificationManager.setPlayer(player)
 
-        //Media session to allow communicate with other media controllers
+        //Media session
+        // -- allows communicate with other media controllers like google voice
+        // -- Shows the notification in quick settings panel
         mediaSessionCompat = MediaSessionCompat(context, MEDIA_SESSION_TAG)
         mediaSessionCompat.isActive = true
         playerNotificationManager.setMediaSessionToken(mediaSessionCompat.sessionToken)
         mediaSessionConnector = MediaSessionConnector(mediaSessionCompat)
+        /*mediaSessionConnector.setQueueNavigator(object :TimelineQueueNavigator(mediaSessionCompat){
+            override fun getMediaDescription(
+                player: Player,
+                windowIndex: Int
+            ): MediaDescriptionCompat {
+                return videoSamples[windowIndex].
+            }
+
+        })*/
+        mediaSessionConnector.setPlayer(player)
     }
 
     private fun configurePlayer(context: Context) {
@@ -110,6 +125,8 @@ class PlayerBkgService : Service() {
     }
 
     override fun onDestroy() {
+        mediaSessionCompat.release()
+        mediaSessionConnector.setPlayer(null)
         playerNotificationManager.setPlayer(null)
         player?.release()
         player = null
