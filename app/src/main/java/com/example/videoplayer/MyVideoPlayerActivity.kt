@@ -83,7 +83,7 @@ class MyVideoPlayerActivity: AppCompatActivity() {
             // Create the NotificationChannel
             val name = getString(R.string.channel_name)
             val descriptionText = getString(R.string.channel_desc)
-            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val importance = NotificationManager.IMPORTANCE_LOW
             val mChannel = NotificationChannel(PLAYBACK_CHANNEL_ID, name, importance)
             mChannel.description = descriptionText
             // Register the channel with the system; you can't change the importance
