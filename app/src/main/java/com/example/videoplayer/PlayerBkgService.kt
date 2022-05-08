@@ -9,10 +9,10 @@ import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Binder
 import android.os.IBinder
-import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.app.NotificationCompat
 import androidx.core.graphics.drawable.toBitmap
 import com.example.videoplayer.VideoUtils.NOTIFICATION_ID
 import com.example.videoplayer.VideoUtils.PLAYBACK_CHANNEL_ID
@@ -20,8 +20,6 @@ import com.google.android.exoplayer2.ExoPlayer
 import com.google.android.exoplayer2.MediaItem
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.ext.mediasession.MediaSessionConnector
-import com.google.android.exoplayer2.ext.mediasession.TimelineQueueEditor
-import com.google.android.exoplayer2.ext.mediasession.TimelineQueueNavigator
 import com.google.android.exoplayer2.source.ConcatenatingMediaSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
@@ -70,7 +68,7 @@ class PlayerBkgService : Service() {
         configurePlayer(context)
 
         //Configure foreground notification
-        playerNotificationManager = PlayerNotificationManager.Builder(
+        /*playerNotificationManager = PlayerNotificationManager.Builder(
             context,
             NOTIFICATION_ID, //Identifies Notification
             PLAYBACK_CHANNEL_ID, //Identifies notification channel
@@ -78,9 +76,26 @@ class PlayerBkgService : Service() {
             notificationListener()
         ).setMediaDescriptionAdapter(
             mediaDescriptor(this) //Gives description about currently played item
-        ).build()
+        ).setCustomActionReceiver(customAction())
+            .build()*/
+
+        playerNotificationManager = VideoNotificationManager(
+            context,
+            PLAYBACK_CHANNEL_ID,
+            NOTIFICATION_ID,
+            mediaDescriptor(this),
+            notificationListener(),
+            customAction()
+        )
+
+
 
         playerNotificationManager.setPlayer(player)
+        playerNotificationManager.setUsePreviousActionInCompactView(true)
+        playerNotificationManager.setUseNextActionInCompactView(true)
+        playerNotificationManager.setUseFastForwardAction(false)
+        playerNotificationManager.setUseRewindAction(false)
+        playerNotificationManager.setUseNextAction(false)
 
         //Media session
         // -- allows communicate with other media controllers like google voice
@@ -89,12 +104,20 @@ class PlayerBkgService : Service() {
         mediaSessionCompat.isActive = true
         playerNotificationManager.setMediaSessionToken(mediaSessionCompat.sessionToken)
         mediaSessionConnector = MediaSessionConnector(mediaSessionCompat)
-        /*mediaSessionConnector.setQueueNavigator(object :TimelineQueueNavigator(mediaSessionCompat){
+       /* mediaSessionConnector.setQueueNavigator(object :TimelineQueueNavigator(mediaSessionCompat){
             override fun getMediaDescription(
                 player: Player,
                 windowIndex: Int
             ): MediaDescriptionCompat {
-                return videoSamples[windowIndex].
+                val video = videoSamples[windowIndex]
+                val icon = AppCompatResources.getDrawable(context, R.drawable.ic_ap)?.toBitmap()
+                return MediaDescriptionCompat.Builder()
+                    .setDescription(video.description)
+                    .setTitle(video.title)
+                    .setIconBitmap(icon)
+                    .setMediaUri(Uri.parse(video.url))
+                    .build()
+
             }
 
         })*/
@@ -194,4 +217,43 @@ class PlayerBkgService : Service() {
             }
 
         }
+
+    private fun customAction() = object : PlayerNotificationManager.CustomActionReceiver{
+        override fun createCustomActions(
+            context: Context,
+            instanceId: Int
+        ): MutableMap<String, NotificationCompat.Action> {
+            val intent: Intent = Intent("fav").setPackage(context.packageName)
+            val pendingIntent = PendingIntent.getBroadcast(
+                context, instanceId, intent, PendingIntent.FLAG_CANCEL_CURRENT
+            )
+            val action1 = NotificationCompat.Action(
+                com.google.android.exoplayer2.R.drawable.exo_icon_next,
+                "fav",
+                pendingIntent)
+            val actionMap: MutableMap<String, NotificationCompat.Action> = HashMap()
+            actionMap["fav"] = action1
+
+            return actionMap
+        }
+
+        override fun getCustomActions(player: Player): MutableList<String> {
+            val stringActions: MutableList<String> = ArrayList()
+            /*stringActions.add(PlayerNotificationManager.ACTION_PREVIOUS)
+            stringActions.add(PlayerNotificationManager.ACTION_PAUSE)
+            stringActions.add(PlayerNotificationManager.ACTION_PLAY)
+            stringActions.add(PlayerNotificationManager.ACTION_NEXT)*/
+            stringActions.add("fav")
+
+            return stringActions
+        }
+
+        override fun onCustomAction(player: Player, action: String, intent: Intent) {
+            Log.e("onCustomAction","action: "+ intent.action + action);
+            when(action){
+               "fav" -> player.seekToNext()
+            }
+        }
+
+    }
 }
