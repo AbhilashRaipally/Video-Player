@@ -80,6 +80,10 @@ class PlayerBkgService : Service() {
             mediaDescriptor(this) //Gives description about currently played item
         ).build()
 
+        playerNotificationManager.setUseRewindAction(false)
+        playerNotificationManager.setUseFastForwardAction(false)
+        playerNotificationManager.setUseNextActionInCompactView(true)
+        playerNotificationManager.setUsePreviousActionInCompactView(true)
         playerNotificationManager.setPlayer(player)
 
         //Media session
