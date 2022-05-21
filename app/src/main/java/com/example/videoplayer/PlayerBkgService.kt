@@ -98,6 +98,7 @@ class PlayerBkgService : Service() {
 
         //Queue navigator helps in ensuring remote controls work and also helps us to get callbacks for events
         //https://github.com/google/ExoPlayer/issues/3559
+        //https://medium.com/google-exoplayer/the-mediasession-extension-for-exoplayer-82b9619deb2d
         mediaSessionConnector.setQueueNavigator(object :TimelineQueueNavigator(mediaSessionCompat){
             override fun getMediaDescription(
                 player: Player,
