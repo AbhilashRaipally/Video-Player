@@ -11,6 +11,7 @@ import android.os.Binder
 import android.os.IBinder
 import android.support.v4.media.MediaDescriptionCompat
 import android.support.v4.media.session.MediaSessionCompat
+import android.support.v4.media.session.PlaybackStateCompat
 import android.util.Log
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.graphics.drawable.toBitmap
@@ -91,18 +92,29 @@ class PlayerBkgService : Service() {
         // -- Shows the notification in quick settings panel
         mediaSessionCompat = MediaSessionCompat(context, MEDIA_SESSION_TAG)
         mediaSessionCompat.isActive = true
+
         playerNotificationManager.setMediaSessionToken(mediaSessionCompat.sessionToken)
         mediaSessionConnector = MediaSessionConnector(mediaSessionCompat)
-        /*mediaSessionConnector.setQueueNavigator(object :TimelineQueueNavigator(mediaSessionCompat){
+
+        //Queue navigator helps in ensuring remote controls work and also helps us to get callbacks for events
+        //https://github.com/google/ExoPlayer/issues/3559
+        mediaSessionConnector.setQueueNavigator(object :TimelineQueueNavigator(mediaSessionCompat){
             override fun getMediaDescription(
                 player: Player,
                 windowIndex: Int
             ): MediaDescriptionCompat {
-                return videoSamples[windowIndex].
+                return MediaDescriptionCompat.Builder()
+                    .setDescription(videoSamples[windowIndex].description)
+                    .build()
             }
 
-        })*/
+            override fun onSkipToNext(player: Player) {
+                Log.d("Media:","on skip to next")
+                super.onSkipToNext(player)
+            }
+        })
         mediaSessionConnector.setPlayer(player)
+
     }
 
     private fun configurePlayer(context: Context) {
